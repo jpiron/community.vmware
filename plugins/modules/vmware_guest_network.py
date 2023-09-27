@@ -347,8 +347,8 @@ class PyVmomiHelper(PyVmomi):
         '''
         get the vlan id from network object
         :param network: network object to expect, either vim.Network or vim.dvs.DistributedVirtualPortgroup
-        :return: vlan id as an integer
-        :rtype: integer
+        :return: vlan id as an integer or string in the case of a vlan_id rnage
+        :rtype: integer or string
         '''
         vlan_id = None
         if isinstance(network, vim.dvs.DistributedVirtualPortgroup):
@@ -360,7 +360,10 @@ class PyVmomiHelper(PyVmomi):
                     if pg.spec.name == network.name:
                         vlan_id = pg.spec.vlanId
                         return vlan_id
-
+        # NOTE: vlan_id could be a vim.NumericRange, however for some reason
+        # using isinstance(vlan_id, vim.NumericRange) doesn't work.
+        if not isinstance(vlan_id, int):
+            vlan_id = f"{vlan_id[0].start}-{vlan_id[0].end}"
         return vlan_id
 
     def _get_nics_from_vm(self, vm_obj):
